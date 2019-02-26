@@ -46,14 +46,14 @@ module OFC
 
 
 [] (DRNtoOFC = 3 & HCtoOFC1key < 2 & HC=1 ) -> (HCtoOFC1key' = HCtoOFC1key + 1) & (pos'=0) & (s'=s+1);
-[] (DRNtoOFC = 3  & HCtoOFC2key < 2 & HC=2 ) -> (HCtoOFC2key' = HCtoOFC2key + 1) & (pos'=0) & (s'=s+1);
-[] (DRNtoOFC = 3  & HCtoOFC3key < 2 & HC=3 ) -> (HCtoOFC3key' = HCtoOFC3key + 1) & (pos'=0) & (s'=s+1); //must reset position from here :(
+[] (DRNtoOFC = 3 & HCtoOFC2key < 2 & HC=2 ) -> (HCtoOFC2key' = HCtoOFC2key + 1) & (pos'=0) & (s'=s+1);
+[] (DRNtoOFC = 3 & HCtoOFC3key < 2 & HC=3 ) -> (HCtoOFC3key' = HCtoOFC3key + 1) & (pos'=0) & (s'=s+1); //must reset position from here :(
 
 
 
-[] (DRNtoOFC = 1  & HCtoOFC1key > 0 & HC=1  ) -> (HCtoOFC1key' = HCtoOFC1key - 1) & (pos'=0) & (s'=s+1);
-[] (DRNtoOFC = 1  & HCtoOFC2key > 0 & HC=2  ) -> (HCtoOFC2key' = HCtoOFC2key - 1) & (pos'=0) & (s'=s+1);
-[] (DRNtoOFC = 1  & HCtoOFC3key > 0 & HC=3  ) -> (HCtoOFC3key' = HCtoOFC3key - 1) & (pos'=0) & (s'=s+1); //must reset position from here :(
+[] (DRNtoOFC = 1 & HCtoOFC1key > 0 & HC=1  ) -> (HCtoOFC1key' = HCtoOFC1key - 1) & (pos'=0) & (s'=s+1);
+[] (DRNtoOFC = 1 & HCtoOFC2key > 0 & HC=2  ) -> (HCtoOFC2key' = HCtoOFC2key - 1) & (pos'=0) & (s'=s+1);
+[] (DRNtoOFC = 1 & HCtoOFC3key > 0 & HC=3  ) -> (HCtoOFC3key' = HCtoOFC3key - 1) & (pos'=0) & (s'=s+1); //must reset position from here :(
 
 
 
