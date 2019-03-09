@@ -26,6 +26,10 @@ const ofc_move_threshold;
 
 module agentMotor
 
+//am_state = 0: random movement
+//am_state = 1: check HC-OFC strngth and produce 5ht if necessary, try get reward (maybe split up into 2 states)
+//am_state= 2: signal OFC + reset to am_state=0;
+
 pos : [0..100] init 0;//0 is starting position
 
 
@@ -35,14 +39,26 @@ am_state : [0..10] init 0;
 
 reward_pos : [0..100] init 1; //temporary TODO add mPFC model
 
-[] (am_state = 0 & HCtoOFC1>=ofc_move_threshold & HCtoOFC1>HCtoOFC2 & HCtoOFC1>HCtoOFC3) -> 1/3 : (pos'=1) & (am_state' = 1) + 1/3 : (pos'=2) & (am_state' = 1) + 1/3 : (pos'=3) & (am_state' = 1); //TODO add DRN excitement
-[] (am_state = 0 & HCtoOFC2>=ofc_move_threshold & HCtoOFC2>HCtoOFC1 & HCtoOFC2>HCtoOFC3) -> 1/3 : (pos'=1) & (am_state' = 1) + 1/3 : (pos'=2) & (am_state' = 1) + 1/3 : (pos'=3) & (am_state' = 1); //TODO add DRN excitement
-[] (am_state = 0 & HCtoOFC3>=ofc_move_threshold & HCtoOFC3>HCtoOFC1 & HCtoOFC3>HCtoOFC2) -> 1/3 : (pos'=1) & (am_state' = 1) + 1/3 : (pos'=2) & (am_state' = 1) + 1/3 : (pos'=3) & (am_state' = 1); //TODO add DRN excitement
-[] (am_state = 0 & HCtoOFC1<ofc_move_threshold & HCtoOFC2<ofc_move_threshold & HCtoOFC3<ofc_move_threshold)-> 1/3 : (pos'=1) & (am_state' = 1) + 1/3 : (pos'=2) & (am_state' = 1) + 1/3 : (pos'=3) &  (am_state' = 1);
+[move] (am_state = 1 & HCtoOFC1>=ofc_move_threshold & HCtoOFC1>HCtoOFC2 & HCtoOFC1>HCtoOFC3) -> 
+(am_state' = 1);
+//TODO add DRN excitement
+
+[move] (am_state = 1 & HCtoOFC2>=ofc_move_threshold & HCtoOFC2>HCtoOFC1 & HCtoOFC2>HCtoOFC3) -> 
+(am_state' = 1); 
+//TODO add DRN excitement
+
+[move] (am_state = 1 & HCtoOFC3>=ofc_move_threshold & HCtoOFC3>HCtoOFC1 & HCtoOFC3>HCtoOFC2) ->
+ (am_state' = 1); 
+//TODO add DRN excitement
+
+[move] (am_state = 1 )-> 
+1/3 : (pos'=1) & (am_state' = 1) + 1/3 : (pos'=2) & (am_state' = 1) + 1/3 : (pos'=3) &  (am_state' = 1);
+//random movement
 
 [signal] (am_state = 1 & ss<reward_reset_step)->(pos' = 0) & (ss' = ss + 1) & (am_state' = 0);
 
-[reset] (am_state = 1 & ss=reward_reset_step) -> 1/3 :(reward_pos'=1) & (am_state' = 0) + 1/3 :(reward_pos'=2) & (am_state' = 0) + 1/3 :(reward_pos'=3) & (ss' = 0) & (am_state' = 0);
+[reset] (am_state = 1 & ss=reward_reset_step) -> 1/3 :(reward_pos'=1) & 
+(am_state' = 0) + 1/3 :(reward_pos'=2) & (am_state' = 0) + 1/3 :(reward_pos'=3) & (ss' = 0) & (am_state' = 0);
 
 endmodule
 
