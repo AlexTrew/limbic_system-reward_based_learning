@@ -181,8 +181,8 @@ formula LH = (pos=reward_pos?1:0);
 
 
 formula OFC1toDRN = LH=1?(OFC1toDRNkey=0?10:(OFC1toDRNkey=1?30:(OFC1toDRNkey=2?90:(OFC1toDRNkey=2?200:0)))):0;
-formula OFC2toDRN = LH=1?(OFC2toDRNkey=0?10:(OFC2toDRNkey=1?30:(OFC2toDRNkey=2?90:(OFC2toDRNkey=2?200:0)))):0;
-formula OFC3toDRN = LH=1?(OFC3toDRNkey=0?10:(OFC3toDRNkey=1?30:(OFC3toDRNkey=2?90:(OFC3toDRNkey=2?200:0)))):0;
+formula OFC2toDRN = LH=2?(OFC2toDRNkey=0?10:(OFC2toDRNkey=1?30:(OFC2toDRNkey=2?90:(OFC2toDRNkey=2?200:0)))):0;
+formula OFC3toDRN = LH=3?(OFC3toDRNkey=0?10:(OFC3toDRNkey=1?30:(OFC3toDRNkey=2?90:(OFC3toDRNkey=2?200:0)))):0;
 
 
 formula HCtoOFC1 = HCtoOFC1key=0?10:(HCtoOFC1key=1?30:(HCtoOFC1key=2?90:(HCtoOFC1key=2?200:0)));
