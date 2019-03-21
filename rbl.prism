@@ -8,15 +8,7 @@ mdp
 
 const reward_reset_step;
 
-//agent motor in pf vars
-
 const drn_reward_wait_threshold;
-
-//ofc vars
-
-
-
-
 
 
 
@@ -123,9 +115,7 @@ module OFC
 HCtoOFC1key : [0..100] init 0;
 HCtoOFC2key : [0..100] init 0;
 HCtoOFC3key : [0..100] init 0;
-OFC1toDRNkey : [0..100] init 0;
-OFC2toDRNkey : [0..100] init 0;
-OFC3toDRNkey : [0..100] init 0;
+
 
 [signalOFC] (DRNtoOFC = 3 & HCtoOFC1key < 2 & HC=1) ->
  (HCtoOFC1key' = HCtoOFC1key + 1);
@@ -169,6 +159,47 @@ OFC3toDRNkey : [0..100] init 0;
 endmodule
 
 module DRN
+
+OFC1toDRNkey : [0..100] init 0;
+OFC2toDRNkey : [0..100] init 0;
+OFC3toDRNkey : [0..100] init 0;
+
+
+[signalOFC] (DRNtoOFC = 3 & OFC1toDRNkey < 2 & HC=1) ->
+ (OFC1toDRNkey' = OFC1toDRNkey + 1);
+
+[signalOFC] (DRNtoOFC = 3 & OFC2toDRNkey < 2 & HC=2) ->
+ (OFC2toDRNkey' = OFC2toDRNkey + 1);
+
+[signalOFC] (DRNtoOFC = 3 & OFC3toDRNkey < 2 & HC=3) ->
+ (OFC3toDRNkey' = OFC3toDRNkey + 1); 
+
+//add OFC to DRN signal based on LH
+
+
+
+[signalOFC] (DRNtoOFC = 3 & OFC1toDRNkey = 2 & HC=1) -> 
+	(OFC1toDRNkey' = 2);
+[signalOFC] (DRNtoOFC = 3 & OFC2toDRNkey = 2 & HC=2) -> 
+	(OFC2toDRNkey' = 2);
+[signalOFC] (DRNtoOFC = 3 & OFC3toDRNkey = 2 & HC=3) -> 
+	(OFC3toDRNkey' = 2);
+
+
+
+[signalOFC] (DRNtoOFC = 1 & OFC1toDRNkey > 0) ->
+ (OFC1toDRNkey' = OFC1toDRNkey - 1);
+
+[signalOFC] (DRNtoOFC = 1 & OFC2toDRNkey > 0) ->
+ (OFC2toDRNkey' = OFC2toDRNkey - 1);
+
+[signalOFC] (DRNtoOFC = 1 & OFC3toDRNkey > 0) ->
+ (OFC3toDRNkey' = OFC3toDRNkey - 1);
+
+
+[signalOFC] (DRNtoOFC = 1 & OFC1toDRNkey = 0 & HC=1) -> (OFC1toDRNkey' = 0);
+[signalOFC] (DRNtoOFC = 1 & OFC2toDRNkey = 0 & HC=2) -> (OFC2toDRNkey' = 0);
+[signalOFC] (DRNtoOFC = 1 & OFC3toDRNkey = 0 & HC=3) -> (OFC3toDRNkey' = 0);
 
 endmodule
 
