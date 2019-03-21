@@ -26,6 +26,8 @@ global reward_collected : bool init false;
 global waiting : bool init false;
 global in_reward_pf : bool init false;
 
+
+
  //temporary TODO add mPFC model
 
 
@@ -62,29 +64,29 @@ reward_pos : [0..100] init 1;
 [] am_state=1 & ((HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
 | (HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
 | (HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> //if agent in same pf as learned reward location, goto am_state=3
-	(am_state'=3) & (waiting'=true);
+	(am_state'=3) & (waiting'=true) & (vis1'=1) ;
 
 [] am_state=1 & (!(HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
 | !(HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
 | !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> //else, goto am_state=2 //TODO refine guard
-	(am_state'=2)  & (waiting'=true);
+	(am_state'=2)  & (waiting'=true) & (vis1'=1) ;
 
 [agent_move] am_state=2 -> //move forward using random speed 
-	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_lo) +
-	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_med) +
-	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_hi); 
+	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_lo) +
+	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_med) +
+	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_hi); 
 
 //TODO am_state=3
 
-[agent_move] am_state=3 & HC=1 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_1);
+[agent_move] am_state=3 & HC=1 & vis2=0 -> (inpf_pos'=inpf_pos+reward_unseen_speed_pf_1);
 
-[agent_move] am_state=3 & HC=2 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_2);
+[agent_move] am_state=3 & HC=2 & vis2=0 -> (inpf_pos'=inpf_pos+reward_unseen_speed_pf_2);
 
-[agent_move] am_state=3 & HC=3 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_3);
-
-[agent_move] am_state=3 & vis2=1 -> (pos'=pos+reward_seen_speed);
+[agent_move] am_state=3 & HC=3 & vis2=0 -> (inpf_pos'=inpf_pos+reward_unseen_speed_pf_3);
 
 [agent_move] (am_state=2 | am_state=3) & reward_present=true -> (vis2'=1); 
+
+[agent_move] am_state=3 & vis2=1 -> (inpf_pos'=inpf_pos+reward_seen_speed);
 
 [agent_move] (am_state=2 | am_state = 3) & inpf_pos>= reward_pos_in_pf ->
 	(am_state'=4);
