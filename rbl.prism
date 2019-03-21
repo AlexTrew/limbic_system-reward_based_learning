@@ -1,10 +1,7 @@
 mdp
 
 
-//const int maxstr;
 
-
-//agent motor out of pf vars
 
 const reward_reset_step;
 
@@ -12,15 +9,17 @@ const drn_reward_wait_threshold;
 
 
 
-const pf_length;
-const delay;
+const pf_length; //length of traversable area in a placefield
+const delay; //number of steps between agent entering a placefield and reward spawning
 
-const mpfc_random_speed_lo;
+//random speeds for traversing placefield before OFC-DRN connection established
+const mpfc_random_speed_lo; 
 const mpfc_random_speed_med;
 const mpfc_random_speed_hi;
 
-const reward_unseen_speed; //must be based on lookup table
-const reward_seen_speed;
+
+const reward_seen_speed = 40;
+
 const reward_pos_in_pf; //must be significantly less than pf_length
 
 global reward_collected : bool init false;
@@ -70,12 +69,22 @@ reward_pos : [0..100] init 1;
 | !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> //else, goto am_state=2 //TODO refine guard
 	(am_state'=2)  & (waiting'=true);
 
-[agent_move] am_state=2 ->
+[agent_move] am_state=2 -> //move forward using random speed 
 	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_lo) +
 	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_med) +
 	 1/3 : (vis1'=1) & (inpf_pos' = inpf_pos + mpfc_random_speed_hi); 
 
 //TODO am_state=3
+
+[agent_move] am_state=3 & HC=1 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_1);
+
+[agent_move] am_state=3 & HC=2 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_2);
+
+[agent_move] am_state=3 & HC=3 & vis2=0 -> (pos'=pos+reward_unseen_speed_pf_3);
+
+[agent_move] am_state=3 & vis2=1 -> (pos'=pos+reward_seen_speed);
+
+[agent_move] (am_state=2 | am_state=3) & reward_present=true -> (vis2'=1); 
 
 [agent_move] (am_state=2 | am_state = 3) & inpf_pos>= reward_pos_in_pf ->
 	(am_state'=4);
@@ -99,7 +108,7 @@ reward_pos : [0..100] init 1;
 	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 2) & (ss' = 0) + 
 	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 3) & (ss' = 0);
 
-[] am_state = 6->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false);
+[] am_state = 6->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);
 
 
 
@@ -111,97 +120,56 @@ endmodule
 
 
 module OFC
+OFC1toDRNkey : [0..100] init 0;
+OFC2toDRNkey : [0..100] init 0;
+OFC3toDRNkey : [0..100] init 0;
 
 HCtoOFC1key : [0..100] init 0;
 HCtoOFC2key : [0..100] init 0;
 HCtoOFC3key : [0..100] init 0;
 
 
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC1key < 2 & HC=1) ->
- (HCtoOFC1key' = HCtoOFC1key + 1);
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC1key < 2 & OFC1toDRNkey < 2 & HC=1) ->
+ (HCtoOFC1key' = HCtoOFC1key + 1) & (OFC1toDRNkey' = OFC1toDRNkey + 1);
 
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC2key < 2 & HC=2) ->
- (HCtoOFC2key' = HCtoOFC2key + 1);
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC2key < 2 & OFC2toDRNkey < 2 & HC=2) ->
+ (HCtoOFC2key' = HCtoOFC2key + 1) & (OFC2toDRNkey' = OFC2toDRNkey + 1);
 
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC3key < 2 & HC=3) ->
- (HCtoOFC3key' = HCtoOFC3key + 1); 
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC3key < 2 & OFC3toDRNkey < 2 & HC=3) ->
+ (HCtoOFC3key' = HCtoOFC3key + 1) & (OFC3toDRNkey' = OFC3toDRNkey + 1); 
 
 //add OFC to DRN signal based on LH
 
 
 
 [signalOFC] (DRNtoOFC = 3 & HCtoOFC1key = 2 & HC=1) -> 
-	(HCtoOFC1key' = 2);
+	(HCtoOFC1key' = 2) & (OFC1toDRNkey'=2);
 [signalOFC] (DRNtoOFC = 3 & HCtoOFC2key = 2 & HC=2) -> 
-	(HCtoOFC2key' = 2);
+	(HCtoOFC2key' = 2) & (OFC2toDRNkey'=2);
 [signalOFC] (DRNtoOFC = 3 & HCtoOFC3key = 2 & HC=3) -> 
-	(HCtoOFC3key' = 2);
+	(HCtoOFC3key' = 2) & (OFC3toDRNkey'=2);
 
 
 
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC1key > 0 & HC=1) ->
- (HCtoOFC1key' = HCtoOFC1key - 1);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC1key > 0 & OFC1toDRNkey > 0 & HC=1) ->
+ (HCtoOFC1key' = HCtoOFC1key - 1) & (OFC1toDRNkey' = OFC1toDRNkey - 1);
 
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC2key > 0 & HC=2) ->
- (HCtoOFC2key' = HCtoOFC2key - 1);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC2key > 0 & OFC2toDRNkey > 0  & HC=2) ->
+ (HCtoOFC2key' = HCtoOFC2key - 1) & (OFC2toDRNkey' = OFC2toDRNkey - 1);
 
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC3key > 0 & HC=3) ->
- (HCtoOFC3key' = HCtoOFC3key - 1);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC3key > 0 & OFC3toDRNkey > 0  & HC=3) ->
+ (HCtoOFC3key' = HCtoOFC3key - 1) & (OFC3toDRNkey' = OFC3toDRNkey - 1);
 
 
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC1key = 0 & HC=1) -> (HCtoOFC1key' = 0);
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC2key = 0 & HC=2) -> (HCtoOFC2key' = 0);
-[signalOFC] (DRNtoOFC = 1 & HCtoOFC3key = 0 & HC=3) -> (HCtoOFC3key' = 0);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC1key = 0 & HC=1) -> (HCtoOFC1key' = 0) & (OFC1toDRNkey'=0);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC2key = 0 & HC=2) -> (HCtoOFC2key' = 0) & (OFC2toDRNkey'=0);
+[signalOFC] (DRNtoOFC = 1 & HCtoOFC3key = 0 & HC=3) -> (HCtoOFC3key' = 0) & (OFC3toDRNkey'=0);
 
 
 //choose weight function hypothesis non deterministically; resolve for max P of success
 
 endmodule
 
-module DRN
-
-OFC1toDRNkey : [0..100] init 0;
-OFC2toDRNkey : [0..100] init 0;
-OFC3toDRNkey : [0..100] init 0;
-
-
-[signalOFC] (DRNtoOFC = 3 & OFC1toDRNkey < 2 & HC=1) ->
- (OFC1toDRNkey' = OFC1toDRNkey + 1);
-
-[signalOFC] (DRNtoOFC = 3 & OFC2toDRNkey < 2 & HC=2) ->
- (OFC2toDRNkey' = OFC2toDRNkey + 1);
-
-[signalOFC] (DRNtoOFC = 3 & OFC3toDRNkey < 2 & HC=3) ->
- (OFC3toDRNkey' = OFC3toDRNkey + 1); 
-
-//add OFC to DRN signal based on LH
-
-
-
-[signalOFC] (DRNtoOFC = 3 & OFC1toDRNkey = 2 & HC=1) -> 
-	(OFC1toDRNkey' = 2);
-[signalOFC] (DRNtoOFC = 3 & OFC2toDRNkey = 2 & HC=2) -> 
-	(OFC2toDRNkey' = 2);
-[signalOFC] (DRNtoOFC = 3 & OFC3toDRNkey = 2 & HC=3) -> 
-	(OFC3toDRNkey' = 2);
-
-
-
-[signalOFC] (DRNtoOFC = 1 & OFC1toDRNkey > 0) ->
- (OFC1toDRNkey' = OFC1toDRNkey - 1);
-
-[signalOFC] (DRNtoOFC = 1 & OFC2toDRNkey > 0) ->
- (OFC2toDRNkey' = OFC2toDRNkey - 1);
-
-[signalOFC] (DRNtoOFC = 1 & OFC3toDRNkey > 0) ->
- (OFC3toDRNkey' = OFC3toDRNkey - 1);
-
-
-[signalOFC] (DRNtoOFC = 1 & OFC1toDRNkey = 0 & HC=1) -> (OFC1toDRNkey' = 0);
-[signalOFC] (DRNtoOFC = 1 & OFC2toDRNkey = 0 & HC=2) -> (OFC2toDRNkey' = 0);
-[signalOFC] (DRNtoOFC = 1 & OFC3toDRNkey = 0 & HC=3) -> (OFC3toDRNkey' = 0);
-
-endmodule
 
 
 //TODO move drntoOFC to separate module
@@ -232,27 +200,28 @@ formula HC = (pos=1?1:(pos=2?2:pos=3?3:0));
 formula DRNtoOFC = (LH=1?3:(LH=0?1:1));
 formula LH = (reward_collected=true?1:0);
 
-// formula OFCtoDRN = 
-//TODO formula DRN to mPFC
 
 
 
+//lookup tables for OFC to DRN
 formula OFC1toDRN = (OFC1toDRNkey=0?10:(OFC1toDRNkey=1?30:(OFC1toDRNkey=2?90:(OFC1toDRNkey=2?200:0))));
 formula OFC2toDRN = (OFC2toDRNkey=0?10:(OFC2toDRNkey=1?30:(OFC2toDRNkey=2?90:(OFC2toDRNkey=2?200:0))));
 formula OFC3toDRN = (OFC3toDRNkey=0?10:(OFC3toDRNkey=1?30:(OFC3toDRNkey=2?90:(OFC3toDRNkey=2?200:0))));
 
-
+//lookup tables for HC to OFC
 formula HCtoOFC1 = HCtoOFC1key=0?10:(HCtoOFC1key=1?30:(HCtoOFC1key=2?90:(HCtoOFC1key=2?200:0)));
 formula HCtoOFC2 = HCtoOFC2key=0?10:(HCtoOFC2key=1?30:(HCtoOFC2key=2?90:(HCtoOFC2key=2?200:0)));
 formula HCtoOFC3 = HCtoOFC3key=0?10:(HCtoOFC3key=1?30:(HCtoOFC3key=2?90:(HCtoOFC3key=2?200:0)));
 
 formula x = vis1 + vis2; //speed based on visual inputs
 
-formula mPFC_out = ((x=1)?reward_unseen_speed:(x=2)?reward_seen_speed:0);
-
-//TODO reward_unseen_speed formula
 
 
+// reward_unseen_speed formula for each pf based on OFCxtoDRN connection strength
+
+formula reward_unseen_speed_pf_1 = (OFC1toDRN = 10?40:(OFC1toDRN = 30?20:(OFC1toDRN = 90?10:(OFC1toDRN = 200?5:0))));
+formula reward_unseen_speed_pf_2 = (OFC2toDRN = 10?40:(OFC2toDRN = 30?20:(OFC2toDRN = 90?10:(OFC2toDRN = 200?5:0))));
+formula reward_unseen_speed_pf_3 = (OFC3toDRN = 10?40:(OFC3toDRN = 30?20:(OFC3toDRN = 90?10:(OFC3toDRN = 200?5:0))));
 
 
 
