@@ -174,7 +174,7 @@ module reward_spawner
 c : [0..delay] init 0; //reward spawn delay counter CANNOT be zero
 t : [0..10] init 0;  //state counter to help ordering of events
 
-spwnd : bool init false;
+
 despwnd : bool init false;
 reward_present : bool init false;
 
@@ -182,9 +182,9 @@ reward_present : bool init false;
 [] (t=0) & waiting=true -> 1: (t' = 1);
 
 [agent_move] (t=1) & reward_present=false & c<delay-> 1: (c'=c+1);  //increment reward spawn counter
-[agent_move] (t=1) & reward_present & c>=delay -> (reward_present'=true) & (c'=0) & (t'=2); //spawn reward after "delay" steps
+[agent_move] (t=1) & reward_present=false & c>=delay -> (reward_present'=true) & (c'=0) & (t'=2); //spawn reward after "delay" steps
 [agent_move] waiting=true & (t=2) & reward_present=true -> (t'=2);
-[] waiting=false -> (t'=0) & (c'=0) & (reward_present'=false) & (reward_present'=false);
+[] waiting=false -> (t'=0) & (c'=0) & (reward_present'=false);
 
  
 endmodule
