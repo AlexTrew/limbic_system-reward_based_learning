@@ -28,13 +28,6 @@ global in_reward_pf : bool init false;
 
 
 
- //temporary TODO add mPFC model
-
-
-
-
-
-
 module agentMotor
 
 //am_state=0: random movement to pf
@@ -68,7 +61,7 @@ reward_pos : [0..100] init 1;
 
 [] am_state=1 & (!(HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
 | !(HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
-| !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> //else, goto am_state=2 //TODO refine guard
+| !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> 
 	(am_state'=2)  & (waiting'=true) & (vis1'=1) ;
 
 [agent_move] am_state=2 & inpf_pos + mpfc_random_speed_hi < pf_length -> //move forward using random speed 
@@ -76,7 +69,6 @@ reward_pos : [0..100] init 1;
 	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_med) +
 	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_hi); 
 
-//TODO am_state=3
 
 [agent_move] am_state=3 & HC=1 & vis2=0 & inpf_pos + reward_unseen_speed_pf_1 < pf_length-> (inpf_pos'=inpf_pos+reward_unseen_speed_pf_1);
 
@@ -103,7 +95,7 @@ reward_pos : [0..100] init 1;
 [] am_state=4 & reward_present = false & in_reward_pf= false ->
 	(reward_collected'=false) & (am_state'=5) & (waiting'=false) & (inpf_pos'=0);
 
-[signalOFC] (am_state = 5 & ss!=reward_reset_step)->(ss' = ss + 1) & (am_state' = 6); //send signal to OFC and reset am_state
+[signalOFC] (am_state = 5 & ss!=reward_reset_step) & ss + 1 < 100 ->(ss' = ss + 1) & (am_state' = 6); //send signal to OFC and reset am_state
 
 [reset] (am_state = 5 & ss=reward_reset_step) ->   //reset reward location on reset_reward_step
 	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 1) & (ss' = 0) + 
@@ -174,7 +166,7 @@ endmodule
 
 
 
-//TODO move drntoOFC to separate module
+
 
 module reward_spawner
 
@@ -189,12 +181,12 @@ reward_present : bool init false;
 [] (t=0) & waiting=false -> 1: (t' = 0);
 [] (t=0) & waiting=true -> 1: (t' = 1);
 
-[agent_move] (t=1) & spwnd=false & c<delay-> 1: (c'=c+1);  //increment reward spawn counter
-[agent_move] (t=1) & spwnd=false & c>=delay -> (spwnd'=true) & (c'=0) & (reward_present'=true) & (t'=2); //spawn reward after "delay" steps
-[agent_move] waiting=true & (t=2) & spwnd=true -> (t'=2);
-[] waiting=false -> (t'=0) & (c'=0) & (spwnd'=false) & (reward_present'=false);
+[agent_move] (t=1) & reward_present=false & c<delay-> 1: (c'=c+1);  //increment reward spawn counter
+[agent_move] (t=1) & reward_present & c>=delay -> (reward_present'=true) & (c'=0) & (t'=2); //spawn reward after "delay" steps
+[agent_move] waiting=true & (t=2) & reward_present=true -> (t'=2);
+[] waiting=false -> (t'=0) & (c'=0) & (reward_present'=false) & (reward_present'=false);
 
-//TODO 
+ 
 endmodule
 
 
