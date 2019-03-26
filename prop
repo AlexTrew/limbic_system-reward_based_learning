@@ -1,2 +1,2 @@
-Pmax=? [ F (am_state=3) ]
+P=? [ F (unlearned=true) &  am_state=7 ]
 

@@ -1,7 +1,8 @@
-mdp
+dtmc
 
 
 
+const total_resets;
 
 const reward_reset_step;
 
@@ -28,6 +29,8 @@ global in_reward_pf : bool init false;
 
 
 
+
+
 module agentMotor
 
 //am_state=0: random movement to pf
@@ -43,6 +46,13 @@ inpf_pos : [0..pf_length];
 ss : [0..200] init 0; //reward location reset counter
 am_state : [0..10] init 0; //state counter for this module
 
+resets : [0..total_resets + 100] init 0;
+
+learned : bool init false;
+unlearned : bool init false;
+
+last_learned : [0..100] init 0;
+
 vis1 : [0..1] init 0; // reward landmark seen
 vis2 : [0..1] init 0; // reward seen
 
@@ -57,12 +67,17 @@ reward_pos : [0..100] init 1; //placefield containing reward
 [] am_state=1 & ((HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
 | (HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
 | (HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> //if agent in same pf as learned reward location, goto am_state=3
-	(am_state'=3) & (waiting'=true) & (vis1'=1) ;
+	(am_state'=3) & (waiting'=true) & (vis1'=1) & (learned'=true) & (last_learned' = HC);
 
 [] am_state=1 & (!(HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
 | !(HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
 | !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> 
 	(am_state'=2)  & (waiting'=true) & (vis1'=1) ;
+
+[] am_state=1 & learned=true & HC=last_learned & (!(HC=1 & OFC1toDRN>drn_reward_wait_threshold) 
+| !(HC=2 & OFC2toDRN>drn_reward_wait_threshold) 
+| !(HC=3 & OFC3toDRN>drn_reward_wait_threshold)) -> 
+	(am_state'=2)  & (waiting'=true) & (vis1'=1) & (unlearned'=true);
 
 [agent_move] am_state=2 & inpf_pos + mpfc_random_speed_hi < pf_length -> //move forward using random speed 
 	 1/3 : (inpf_pos' = inpf_pos + mpfc_random_speed_lo) +
@@ -99,15 +114,16 @@ reward_pos : [0..100] init 1; //placefield containing reward
 
 [signalOFC] (am_state = 5 & ss!=reward_reset_step) & ss + 1 < 100 ->(ss' = ss + 1) & (am_state' = 6); //send signal to OFC and reset am_state
 
-[reset] (am_state = 5 & ss=reward_reset_step) ->   //reset reward location on reset_reward_step
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 1) & (ss' = 0) + 
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 2) & (ss' = 0) + 
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 3) & (ss' = 0);
+[reset] (am_state = 5 & ss=reward_reset_step) & resets<total_resets+100 ->   //reset reward location on reset_reward_step
+	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 1) & (ss' = 0) & (resets'=resets+1) + 
+	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 2) & (ss' = 0) & (resets'=resets+1) + 
+	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 3) & (ss' = 0) & (resets'=resets+1);
 
-[] am_state = 6->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
+[] am_state = 6 & resets!=total_resets->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
 
+[] am_state = 6 & resets=total_resets->(pos' = 0) & (am_state'=7) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
 
-
+[] am_state=7 -> (am_state'=7);
 
 
 endmodule
