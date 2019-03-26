@@ -1,6 +1,22 @@
 mdp
 
+const reward_unseen_speed_1;
+const reward_unseen_speed_2;
+const reward_unseen_speed_3;
+const reward_unseen_speed_4;
+const reward_unseen_speed_5;
 
+const ofc_to_drn_1;
+const ofc_to_drn_2;
+const ofc_to_drn_3;
+const ofc_to_drn_4;
+const ofc_to_drn_5;
+
+const hc_to_ofc_1;
+const hc_to_ofc_2;
+const hc_to_ofc_3;
+const hc_to_ofc_4;
+const hc_to_ofc_5;
 
 
 const reward_reset_step;
@@ -138,12 +154,12 @@ HCtoOFC3key : [0..100] init 0;
 
 
 //upper limit connection strengths
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC1key = 2 & HC=1) -> 
-	(HCtoOFC1key' = 2) & (OFC1toDRNkey'=2);
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC2key = 2 & HC=2) -> 
-	(HCtoOFC2key' = 2) & (OFC2toDRNkey'=2);
-[signalOFC] (DRNtoOFC = 3 & HCtoOFC3key = 2 & HC=3) -> 
-	(HCtoOFC3key' = 2) & (OFC3toDRNkey'=2);
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC1key = 4 & HC=1) -> 
+	(HCtoOFC1key' = 4) & (OFC1toDRNkey'=4);
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC2key = 4 & HC=2) -> 
+	(HCtoOFC2key' = 4) & (OFC2toDRNkey'=4);
+[signalOFC] (DRNtoOFC = 3 & HCtoOFC3key = 4 & HC=3) -> 
+	(HCtoOFC3key' = 4) & (OFC3toDRNkey'=4);
 
 
 //if DRN to OFC connection is low, decrease HC to relevant OFC connection strength
@@ -201,14 +217,14 @@ formula LH = (reward_collected=true?1:0);
 
 
 //lookup tables for OFC to DRN
-formula OFC1toDRN = (OFC1toDRNkey=0?10:(OFC1toDRNkey=1?30:(OFC1toDRNkey=2?90:(OFC1toDRNkey=2?200:0))));
-formula OFC2toDRN = (OFC2toDRNkey=0?10:(OFC2toDRNkey=1?30:(OFC2toDRNkey=2?90:(OFC2toDRNkey=2?200:0))));
-formula OFC3toDRN = (OFC3toDRNkey=0?10:(OFC3toDRNkey=1?30:(OFC3toDRNkey=2?90:(OFC3toDRNkey=2?200:0))));
+formula OFC1toDRN = (OFC1toDRNkey=0?ofc_to_drn_1:(OFC1toDRNkey=1?ofc_to_drn_2:(OFC1toDRNkey=2?ofc_to_drn_3:(OFC1toDRNkey=3?ofc_to_drn_4:(OFC1toDRNkey=4?ofc_to_drn_5:0)))));
+formula OFC2toDRN = (OFC2toDRNkey=0?ofc_to_drn_1:(OFC2toDRNkey=1?ofc_to_drn_2:(OFC2toDRNkey=2?ofc_to_drn_3:(OFC2toDRNkey=3?ofc_to_drn_4:(OFC2toDRNkey=4?ofc_to_drn_5:0)))));
+formula OFC3toDRN = (OFC3toDRNkey=0?ofc_to_drn_1:(OFC3toDRNkey=1?ofc_to_drn_2:(OFC3toDRNkey=2?ofc_to_drn_3:(OFC3toDRNkey=3?ofc_to_drn_4:(OFC3toDRNkey=4?ofc_to_drn_5:0)))));
 
 //lookup tables for HC to OFC
-formula HCtoOFC1 = HCtoOFC1key=0?10:(HCtoOFC1key=1?30:(HCtoOFC1key=2?90:(HCtoOFC1key=2?200:0)));
-formula HCtoOFC2 = HCtoOFC2key=0?10:(HCtoOFC2key=1?30:(HCtoOFC2key=2?90:(HCtoOFC2key=2?200:0)));
-formula HCtoOFC3 = HCtoOFC3key=0?10:(HCtoOFC3key=1?30:(HCtoOFC3key=2?90:(HCtoOFC3key=2?200:0)));
+formula HCtoOFC1 = HCtoOFC1key=0?hc_to_ofc_1:(HCtoOFC1key=1?hc_to_ofc_2:(HCtoOFC1key=2?hc_to_ofc_3:(HCtoOFC1key=3?hc_to_ofc_4:(HCtoOFC1key=4?hc_to_ofc_5:0))));
+formula HCtoOFC2 = HCtoOFC2key=0?hc_to_ofc_1:(HCtoOFC2key=1?hc_to_ofc_2:(HCtoOFC2key=2?hc_to_ofc_3:(HCtoOFC2key=3?hc_to_ofc_4:(HCtoOFC2key=4?hc_to_ofc_5:0))));
+formula HCtoOFC3 = HCtoOFC3key=0?hc_to_ofc_1:(HCtoOFC3key=1?hc_to_ofc_2:(HCtoOFC3key=2?hc_to_ofc_3:(HCtoOFC3key=3?hc_to_ofc_4:(HCtoOFC3key=4?hc_to_ofc_5:0))));
 
 formula x = vis1 + vis2; //speed based on visual inputs
 
@@ -216,9 +232,9 @@ formula x = vis1 + vis2; //speed based on visual inputs
 
 // reward_unseen_speed formula for each pf based on OFCxtoDRN connection strength
 
-formula reward_unseen_speed_pf_1 = (OFC1toDRN = 10?40:(OFC1toDRN = 30?20:(OFC1toDRN = 90?10:(OFC1toDRN = 200?5:0))));
-formula reward_unseen_speed_pf_2 = (OFC2toDRN = 10?40:(OFC2toDRN = 30?20:(OFC2toDRN = 90?10:(OFC2toDRN = 200?5:0))));
-formula reward_unseen_speed_pf_3 = (OFC3toDRN = 10?40:(OFC3toDRN = 30?20:(OFC3toDRN = 90?10:(OFC3toDRN = 200?5:0))));
+formula reward_unseen_speed_pf_1 = (OFC1toDRN = 10?reward_unseen_speed_1:(OFC1toDRN = 30?reward_unseen_speed_2:(OFC1toDRN = 90?reward_unseen_speed_3:(OFC1toDRN = 200?reward_unseen_speed_4:(OFC1toDRN = 250?reward_unseen_speed_5:0)))));
+formula reward_unseen_speed_pf_2 = (OFC2toDRN = 10?reward_unseen_speed_1:(OFC2toDRN = 30?reward_unseen_speed_2:(OFC2toDRN = 90?reward_unseen_speed_3:(OFC2toDRN = 200?reward_unseen_speed_4:(OFC2toDRN = 250?reward_unseen_speed_5:0)))));
+formula reward_unseen_speed_pf_3 = (OFC3toDRN = 10?reward_unseen_speed_1:(OFC3toDRN = 30?reward_unseen_speed_2:(OFC3toDRN = 90?reward_unseen_speed_3:(OFC3toDRN = 200?reward_unseen_speed_4:(OFC3toDRN = 250?reward_unseen_speed_5:0)))));
 
 
 //todo get all speed values
