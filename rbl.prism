@@ -1,4 +1,4 @@
-mdp
+dtmc
 
 
 
@@ -169,7 +169,7 @@ HC3toOFCkey : [0..100] init 0;
 
 //do nothing
 
-[signal_weight_change]DRN<HC_plasticity_threshold->
+[signal_weight_change]DRN<HC_plasticity_threshold & HC1=0 & HC2=0 & HC3=0->
 	 (HC1toOFCkey'=HC1toOFCkey) & (HC2toOFCkey'=HC2toOFCkey) & (HC3toOFCkey'=HC3toOFCkey);
 
 
