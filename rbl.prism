@@ -66,12 +66,19 @@ reward_pos : [0..100] init 1; //placefield containing reward
 [] (am_state = 0 )-> //move randomly to a placefield  
 1/5 : (pos'=1) & (am_state' = 1)  + 1/5 : (pos'=2) & (am_state' = 1)  + 1/5 : (pos'=3) &  (am_state' = 1) + 1/5 : (pos'=4) & (am_state'=1) + 1/5 : (pos'=5) & (am_state'=1);
 
+[]am_state=1 & (pos<=3)->
+	1/5 : (reward_pos_in_pf'=ave_reward_pos_in_pf) +
+	1/5 : (reward_pos_in_pf'=ave_reward_pos_in_pf + reward_spread)  & (am_state'=2) +
+	1/5 : (reward_pos_in_pf'=ave_reward_pos_in_pf + reward_spread*2)  & (am_state'=2)  +
+	1/5 : (reward_pos_in_pf'=ave_reward_pos_in_pf - reward_spread)  & (am_state'=2)  +
+	1/5 : (reward_pos_in_pf'=ave_reward_pos_in_pf - reward_spread*2)  & (am_state'=2) ;
 
+[]am_state=1 & (pos>3)->(am_state'=6);
 
-[] am_state=1 & (DRN>=drn_reward_wait_threshold)-> //if agent in same pf as learned reward location, goto am_state=4
+[] am_state=2 & (DRN>=drn_reward_wait_threshold)-> //if agent in same pf as learned reward location, goto am_state=4
 	(am_state'=4) & (waiting'=true) & (vis1'=1) & (learned'=true);
 
-[] am_state=1 & (DRN<drn_reward_wait_threshold) ->
+[] am_state=2 & (DRN<drn_reward_wait_threshold) ->
  (am_state'=3)  & (waiting'=true) & (vis1'=1);
 
 
@@ -89,36 +96,38 @@ reward_pos : [0..100] init 1; //placefield containing reward
 
 [agent_move] reward_present=true -> (vis2'=1); 
 
-[agent_move] am_state=3 & vis2=1 & inpf_pos + reward_seen_speed < pf_length  -> (inpf_pos'=inpf_pos+reward_seen_speed);
+[agent_move] am_state=4 & vis2=1 & inpf_pos + reward_seen_speed < pf_length  -> (inpf_pos'=inpf_pos+reward_seen_speed);
 
-[agent_move] (am_state=2 | am_state = 3) & inpf_pos>= reward_pos_in_pf ->
-	(am_state'=4);
+[agent_move] (am_state=3 | am_state = 4) & inpf_pos>= reward_pos_in_pf ->
+	(am_state'=5);
 
-[] am_state=4 & pos = reward_pos & reward_present = true ->  //agent is in the placefield with the reward and the reward has appeared, so the agent collects the reward
-	(reward_collected'=true) & (am_state'=5) & (waiting'=false) & (inpf_pos'=0);
+//updated
 
-[] am_state=4 & reward_present = true & pos != reward_pos -> //fake reward has appeared as agent is not in the correct placefield, so no reward gained.
-	(reward_collected'=false) & (am_state'=5) & (waiting'=false) & (inpf_pos'=0);
+[] am_state=5 & pos = reward_pos & reward_present = true ->  //agent is in the placefield with the reward and the reward has appeared, so the agent collects the reward
+	(reward_collected'=true) & (am_state'=6) & (waiting'=false) & (inpf_pos'=0);
 
-[] am_state=4 & reward_present = false & pos = reward_pos ->//reward has not appeared and agent is in the correct placefield, so no reward gained
-	(reward_collected'=false) & (am_state'=5) & (waiting'=false) & (inpf_pos'=0);
+[] am_state=5 & reward_present = true & pos != reward_pos -> //fake reward has appeared as agent is not in the correct placefield, so no reward gained.
+	(reward_collected'=false) & (am_state'=6) & (waiting'=false) & (inpf_pos'=0);
 
-[] am_state=4 & reward_present = false & pos != reward_pos -> //reward has not appeared and agent is not in the correct placefield, so no reward gained
-	(reward_collected'=false) & (am_state'=5) & (waiting'=false) & (inpf_pos'=0);
+[] am_state=5 & reward_present = false & pos = reward_pos ->//reward has not appeared and agent is in the correct placefield, so no reward gained
+	(reward_collected'=false) & (am_state'=6) & (waiting'=false) & (inpf_pos'=0);
 
-[signal_weight_change] (am_state = 5 & ss!=reward_reset_step) & ss + 1 < 100 ->(ss' = ss + 1) & (am_state' = 6); //send signal to OFC and reset am_state
+[] am_state=5 & reward_present = false & pos != reward_pos -> //reward has not appeared and agent is not in the correct placefield, so no reward gained
+	(reward_collected'=false) & (am_state'=6) & (waiting'=false) & (inpf_pos'=0);
 
-[] (am_state = 5 & ss=reward_reset_step) & resets<total_resets+100 ->   //reset reward location on reset_reward_step
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 1) & (ss' = 0) & (resets'=resets+1) + 
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 2) & (ss' = 0) & (resets'=resets+1) + 
-	1/3 :(pos'=0) & (am_state' = 6) & (reward_pos' = 3) & (ss' = 0) & (resets'=resets+1);
+[signal_weight_change] (am_state = 6 & ss!=reward_reset_step) & ss + 1 < 100 ->(ss' = ss + 1) & (am_state' = 7); //send signal to OFC and reset am_state
+//updated
+[] (am_state = 6 & ss=reward_reset_step) & resets<total_resets+100 ->   //reset reward location on reset_reward_step
+	1/3 :(pos'=0) & (am_state' = 7) & (reward_pos' = 1) & (ss' = 0) & (resets'=resets+1) + 
+	1/3 :(pos'=0) & (am_state' = 7) & (reward_pos' = 2) & (ss' = 0) & (resets'=resets+1) + 
+	1/3 :(pos'=0) & (am_state' = 7) & (reward_pos' = 3) & (ss' = 0) & (resets'=resets+1);
+//updated
+[] am_state = 7 & resets!=total_resets->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
 
-[] am_state = 6 & resets!=total_resets->(pos' = 0) & (am_state'=0) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
+[] am_state = 7 & resets=total_resets->(pos' = 0) & (am_state'=8) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
 
-[] am_state = 6 & resets=total_resets->(pos' = 0) & (am_state'=7) & (reward_collected'=false) & (in_reward_pf'=false) & (vis1'=0) & (vis2'=0);//reset variables for each run
-
-[] am_state=7 -> (am_state'=7);
-
+[] am_state=8 -> (am_state'=8);
+//updated
 
 endmodule
 
