@@ -10,6 +10,15 @@ const reward_unseen_speed_2;
 const reward_unseen_speed_3;
 const reward_unseen_speed_4;
 const reward_unseen_speed_5;
+const reward_unseen_speed_6;
+
+const drn_1;
+const drn_2;
+const drn_3;
+const drn_4;
+const drn_5;
+const drn_6;
+
 const total_resets;
 const reward_reset_step;
 const drn_reward_wait_threshold;
@@ -226,12 +235,11 @@ formula LH = (reward_collected=true?1:0);
 
 
 
-//lookup tables for OFC to DRN
 
-//lookup tables for HC to OFC
-formula HC1toOFC = HC1toOFCkey=0?10:(HC1toOFCkey=1?30:(HC1toOFCkey=2?90:(HC1toOFCkey=2?200:0)));
-formula HC2toOFC = HC2toOFCkey=0?10:(HC2toOFCkey=1?30:(HC2toOFCkey=2?90:(HC2toOFCkey=2?200:0)));
-formula HC3toOFC = HC3toOFCkey=0?10:(HC3toOFCkey=1?30:(HC3toOFCkey=2?90:(HC3toOFCkey=2?200:0)));
+//"lookup tables" for HC to OFC
+formula HC1toOFC = HC1toOFCkey=0?10:(HC1toOFCkey=1?30:(HC1toOFCkey=2?90:(HC1toOFCkey=2?200:(HC1toOFCkey=3?300:0))));
+formula HC2toOFC = HC2toOFCkey=0?10:(HC2toOFCkey=1?30:(HC2toOFCkey=2?90:(HC2toOFCkey=2?200:(HC2toOFCkey=3?300:0))));
+formula HC3toOFC = HC3toOFCkey=0?10:(HC3toOFCkey=1?30:(HC3toOFCkey=2?90:(HC3toOFCkey=2?200:(HC3toOFCkey=3?300:0))));
 
 formula x = vis1 + vis2; //speed based on visual inputs
 
@@ -240,15 +248,14 @@ formula OFC = HC1*HC1toOFC + HC2*HC2toOFC + HC3*HC3toOFC;
 
 
 
-formula DRN = LH=1?(OFC=10?200:OFC=30?300:OFC=90?400:OFC=200?500:0):(OFC=10?10:OFC=30?40:OFC=90?90:OFC=200?200:0); //todo get 5 proper values
+formula DRN = LH=1?(OFC=10?200:OFC=30?300:OFC=90?400:OFC=200?1000:0):(OFC=10?drn_1:OFC=30?drn_2:OFC=90?drn_3:OFC=200?drn_4:OFC=250?drn_5:OFC=300?drn_6:0);
 
 // reward_unseen_speed formula for each pf based on OFCxtoDRN connection strength
 
 
 
-formula reward_unseen_speed_pf_1 = (DRN = 10?reward_unseen_speed_1:(DRN = 30?reward_unseen_speed_2:(DRN = 90?reward_unseen_speed_3:(DRN = 200?reward_unseen_speed_4:(DRN = 200?reward_unseen_speed_5:0)))));
-formula reward_unseen_speed_pf_2 = (DRN = 10?40:(DRN = 30?20:(DRN = 90?10:(DRN = 200?5:0))));
-formula reward_unseen_speed_pf_3 = (DRN = 10?40:(DRN = 30?20:(DRN = 90?10:(DRN = 200?5:0))));
+formula reward_unseen_speed_pf_1 = (DRN = drn_1?reward_unseen_speed_1:(DRN = drn_2?reward_unseen_speed_2:(DRN = drn_3?reward_unseen_speed_3:(DRN = drn_4?reward_unseen_speed_4:(DRN = drn_5?reward_unseen_speed_5:DRN=drn_6?reward_unseen_speed_6:0)))));
+
 
 
 //todo get all speed values
